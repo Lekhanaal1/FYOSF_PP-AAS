@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/lib/db';
+import { rateLimiter } from '@/lib/security/rateLimit';
+import { sanitizeError, safeLogError, validateRequestSize } from '@/lib/security/errorHandler';
 import {
   parsePolicyData,
   buildPolicyMaster,
@@ -38,7 +40,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    // Rate limiting (RFI computation can be resource-intensive)
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const limit = rateLimiter.checkLimit(`${ip}-${session.user.id}-rfi`);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    // Validate request size
+    const bodyText = await request.text();
+    try {
+      validateRequestSize(bodyText, 1024 * 1024); // 1MB max
+    } catch (sizeError) {
+      return NextResponse.json(
+        { error: 'Request body too large' },
+        { status: 413 }
+      );
+    }
+
+    const body = JSON.parse(bodyText);
     const { policyDataIds, year } = body;
 
     // Fetch PolicyData files
@@ -112,10 +135,11 @@ export async function POST(request: NextRequest) {
       stats
     });
   } catch (error: any) {
-    console.error('Error computing RFI:', error);
+    safeLogError('Compute RFI', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }

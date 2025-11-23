@@ -43,8 +43,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(validated.password, 12);
+    // Hash password with higher rounds for production
+    const rounds = process.env.NODE_ENV === 'production' ? 14 : 12;
+    const hashedPassword = await bcrypt.hash(validated.password, rounds);
 
     // Create user
     const user = await prisma.user.create({
@@ -75,9 +76,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Registration error:', error);
+    // Don't log registration errors with details (prevents user enumeration)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'An error occurred during registration' },
       { status: 500 }
     );
   }

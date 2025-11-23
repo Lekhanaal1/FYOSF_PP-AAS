@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/lib/db';
+import { sanitizeError, safeLogError } from '@/lib/security/errorHandler';
 
 /**
  * POST /api/reports/[id]/fragmentation
@@ -58,10 +59,11 @@ export async function POST(
 
     return NextResponse.json(fragmentation, { status: 200 });
   } catch (error: any) {
-    console.error('Error saving fragmentation analysis:', error);
+    safeLogError('Save Fragmentation Analysis', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }

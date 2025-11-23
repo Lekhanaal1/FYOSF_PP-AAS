@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/lib/db';
+import { sanitizeError, safeLogError } from '@/lib/security/errorHandler';
 
 // GET - Get single policy data file
 export async function GET(
@@ -26,12 +27,39 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    return NextResponse.json(file);
+    // Limit rawData size in response (prevent DoS)
+    let rawData = null;
+    if (file.rawData) {
+      try {
+        const parsed = JSON.parse(file.rawData);
+        // Only return first 1000 rows to prevent large responses
+        if (Array.isArray(parsed) && parsed.length > 1000) {
+          rawData = parsed.slice(0, 1000);
+        } else {
+          rawData = parsed;
+        }
+      } catch {
+        rawData = null;
+      }
+    }
+
+    return NextResponse.json({
+      id: file.id,
+      fileName: file.fileName,
+      fileType: file.fileType,
+      country: file.country,
+      state: file.state,
+      category: file.category,
+      rawData,
+      createdAt: file.createdAt,
+      // Don't return uploadedBy email
+    });
   } catch (error) {
-    console.error('Error fetching file:', error);
+    safeLogError('Fetch File', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }
@@ -65,10 +93,11 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'File deleted successfully' });
   } catch (error) {
-    console.error('Error deleting file:', error);
+    safeLogError('Delete File', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }

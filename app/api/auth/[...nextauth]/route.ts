@@ -44,7 +44,11 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          // Don't log auth errors with details (prevents user enumeration)
+          // Only log in development
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Auth error:', error);
+          }
           return null;
         }
       },
@@ -52,7 +56,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 days (reduced from 30 for security)
   },
   pages: {
     signIn: '/auth/login',

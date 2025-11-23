@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/lib/db';
+import { sanitizeError, safeLogError, validateRequestSize } from '@/lib/security/errorHandler';
 
 // GET - Get single report
 export async function GET(
@@ -34,12 +35,21 @@ export async function GET(
       return NextResponse.json({ error: 'Report not found' }, { status: 404 });
     }
 
-    return NextResponse.json(report);
+    // Don't return author email
+    const { author, ...reportData } = report;
+    return NextResponse.json({
+      ...reportData,
+      author: {
+        name: author?.name,
+        // Exclude email
+      },
+    });
   } catch (error) {
-    console.error('Error fetching report:', error);
+    safeLogError('Fetch Report', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }
@@ -56,7 +66,18 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    // Validate request size
+    const bodyText = await request.text();
+    try {
+      validateRequestSize(bodyText, 5 * 1024 * 1024); // 5MB max
+    } catch (sizeError) {
+      return NextResponse.json(
+        { error: 'Request body too large' },
+        { status: 413 }
+      );
+    }
+
+    const body = JSON.parse(bodyText);
     const { reportSchema } = await import('@/lib/security/validation');
     const { ContentFilter, BasicFilterStrategy } = await import('@/lib/patterns/strategy');
 
@@ -113,13 +134,26 @@ export async function PUT(
         governance: filteredData.governance,
         kpis: filteredData.kpis,
       },
-      include: {
-        author: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
+      select: {
+        id: true,
+        title: true,
+        executiveSummary: true,
+        background: true,
+        evidence: true,
+        problemStatement: true,
+        ageTokens: true,
+        dutyOfCare: true,
+        stateModules: true,
+        privacyImplementation: true,
+        antiFalseSecurity: true,
+        equityArchitecture: true,
+        securityModel: true,
+        governance: true,
+        kpis: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        // Don't return author email
       },
     });
 
@@ -127,15 +161,16 @@ export async function PUT(
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data. Please check all required fields.' },
         { status: 400 }
       );
     }
 
-    console.error('Error updating report:', error);
+    safeLogError('Update Report', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }
@@ -171,10 +206,11 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Report deleted successfully' });
   } catch (error) {
-    console.error('Error deleting report:', error);
+    safeLogError('Delete Report', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }

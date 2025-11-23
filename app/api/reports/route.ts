@@ -5,6 +5,8 @@ import { prisma } from '@/lib/db';
 import { reportSchema } from '@/lib/security/validation';
 import { ContentFilter, BasicFilterStrategy } from '@/lib/patterns/strategy';
 import { ReportFactory, ReportType } from '@/lib/patterns/factory';
+import { rateLimiter } from '@/lib/security/rateLimit';
+import { sanitizeError, safeLogError, validateRequestSize } from '@/lib/security/errorHandler';
 
 // GET - List all reports
 export async function GET(request: NextRequest) {
@@ -33,10 +35,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(reports);
   } catch (error) {
-    console.error('Error fetching reports:', error);
+    safeLogError('Fetch Reports', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }
@@ -50,7 +53,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const limit = rateLimiter.checkLimit(`${ip}-${session.user.id}`);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    // Validate request size
+    const bodyText = await request.text();
+    try {
+      validateRequestSize(bodyText, 5 * 1024 * 1024); // 5MB max for reports
+    } catch (sizeError) {
+      return NextResponse.json(
+        { error: 'Request body too large' },
+        { status: 413 }
+      );
+    }
+
+    const body = JSON.parse(bodyText);
 
     // Validate input
     const validated = reportSchema.parse(body);
@@ -107,29 +131,44 @@ export async function POST(request: NextRequest) {
         authorId: session.user.id,
         status: 'DRAFT',
       },
-      include: {
-        author: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
+      select: {
+        id: true,
+        title: true,
+        executiveSummary: true,
+        background: true,
+        evidence: true,
+        problemStatement: true,
+        ageTokens: true,
+        dutyOfCare: true,
+        stateModules: true,
+        privacyImplementation: true,
+        antiFalseSecurity: true,
+        equityArchitecture: true,
+        securityModel: true,
+        governance: true,
+        kpis: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        // Don't return author email
       },
     });
 
     return NextResponse.json(savedReport, { status: 201 });
   } catch (error: any) {
     if (error.name === 'ZodError') {
+      // Don't expose full validation error details
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Invalid input data. Please check all required fields.' },
         { status: 400 }
       );
     }
 
-    console.error('Error creating report:', error);
+    safeLogError('Create Report', error);
+    const sanitized = sanitizeError(error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: sanitized.message },
+      { status: sanitized.statusCode }
     );
   }
 }
