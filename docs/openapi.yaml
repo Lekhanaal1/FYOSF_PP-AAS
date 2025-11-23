@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: FYOSF AgeToken API (Reference)
+  version: "0.1"
+  description: |
+    Reference API specification for Privacy-Preserving Age Attestation System (PP-AAS).
+    This API enables attestors to issue AgeTokens and platforms to validate them.
+
+servers:
+  - url: https://attestor.example.gov
+    description: Production attestor server
+  - url: http://localhost:3000
+    description: Development server
+
+paths:
+  /issue_token:
+    post:
+      summary: Issue AgeToken (attestor)
+      description: |
+        Issues a new AgeToken for a user. Requires mTLS authentication with valid attestor certificate.
+        The token proves age-range without sharing PII.
+      operationId: issueToken
+      security:
+        - mTLS: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [age, aud, nonce]
+              properties:
+                age:
+                  type: string
+                  enum: ["UNDER_13","13_15","16_17","18_PLUS"]
+                  description: Age bucket for the user
+                  example: "13_15"
+                aud:
+                  type: string
+                  description: Audience (platform identifier)
+                  example: "com.example.app"
+                nonce:
+                  type: string
+                  description: Random nonce to prevent replay attacks
+                  example: "r4nd0m_n0nc3_b64"
+      responses:
+        '201':
+          description: Token issued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Compact signed token (base64url encoded payload.signature)
+                    example: "eyJ0aWQiOiIuLi4iLCJhZ2UiOiIxM18xNSIsLi4ufQ.eyJzaWciOiIuLi4ifQ"
+        '400':
+          description: Invalid request (missing fields or invalid age bucket)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "missing fields"
+        '401':
+          description: Unauthorized (invalid mTLS certificate)
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+
+  /attestors/{id}/status:
+    get:
+      summary: Get attestor certificate status
+      description: |
+        Retrieves the current status of an attestor's certificate.
+        Used by platforms to verify attestor validity before accepting tokens.
+      operationId: getAttestorStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Attestor identifier
+          example: "attestor.example.org"
+      responses:
+        '200':
+          description: Attestor status retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attestor_id:
+                    type: string
+                    example: "attestor.example.org"
+                  status:
+                    type: string
+                    enum: ["active","revoked","suspended"]
+                    example: "active"
+                  cert_expiry:
+                    type: integer
+                    format: int64
+                    description: Certificate expiration timestamp (Unix epoch)
+                    example: 1735689600
+                  last_updated:
+                    type: integer
+                    format: int64
+                    description: Last status update timestamp
+                    example: 1700000000
+        '404':
+          description: Attestor not found
+
+  /validate_pubkeys:
+    get:
+      summary: Retrieve current attestor public keys/cert bundle
+      description: |
+        Returns a bundle of all active attestor public keys for offline validation.
+        Platforms should fetch this periodically and cache for local token validation.
+        This enables offline validation without requiring attestor calls for each token.
+      operationId: getPublicKeys
+      responses:
+        '200':
+          description: Public key bundle retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        attestor_id:
+                          type: string
+                          example: "attestor.example.org"
+                        pubkey:
+                          type: string
+                          format: base64
+                          description: Public key in base64 format
+                          example: "MCowBQYDK2VwAyEA..."
+                        algorithm:
+                          type: string
+                          enum: ["Ed25519","ECDSA_P256"]
+                          example: "Ed25519"
+                        status:
+                          type: string
+                          enum: ["active","revoked"]
+                          example: "active"
+                        expires_at:
+                          type: integer
+                          format: int64
+                          description: Key expiration timestamp
+                          example: 1735689600
+                  last_updated:
+                    type: integer
+                    format: int64
+                    description: Bundle last update timestamp
+                    example: 1700000000
+                  next_update:
+                    type: integer
+                    format: int64
+                    description: Recommended next fetch time
+                    example: 1700003600
+
+components:
+  securitySchemes:
+    mTLS:
+      type: mutualTLS
+      description: |
+        Mutual TLS authentication using attestor certificate.
+        Certificate must be issued by trusted root CA and not revoked.
+
+  schemas:
+    AgeToken:
+      type: object
+      description: AgeToken payload structure
+      properties:
+        tid:
+          type: string
+          format: uuid
+          description: Token ID (UUID v4)
+        att:
+          type: string
+          description: Attestor identifier
+        age:
+          type: string
+          enum: ["UNDER_13","13_15","16_17","18_PLUS"]
+          description: Age bucket
+        aud:
+          type: string
+          description: Audience (platform identifier)
+        iat:
+          type: integer
+          format: int64
+          description: Issued at (Unix epoch)
+        exp:
+          type: integer
+          format: int64
+          description: Expires at (Unix epoch)
+        nonce:
+          type: string
+          description: Random nonce for replay prevention
+        flags:
+          type: object
+          description: Optional extendable flags
+          properties:
+            purpose:
+              type: string
+              example: "safety"
+
+tags:
+  - name: tokens
+    description: Token issuance and validation
+  - name: attestors
+    description: Attestor management and status
+  - name: keys
+    description: Public key management
+
