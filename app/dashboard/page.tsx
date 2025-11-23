@@ -106,11 +106,25 @@ export default function DashboardPage() {
               <span>Reports</span>
             </Link>
             <Link
+              href="/dashboard/data"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+            >
+              <FileText className="w-5 h-5" />
+              <span>Policy Data Navigator</span>
+            </Link>
+            <Link
               href="/dashboard/new"
               className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition"
             >
               <Plus className="w-5 h-5" />
               <span>New RFI Assessment</span>
+            </Link>
+            <Link
+              href="/dashboard/threat-model"
+              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+            >
+              <Shield className="w-5 h-5" />
+              <span>STRIDE Threat Model</span>
             </Link>
           </nav>
         </aside>

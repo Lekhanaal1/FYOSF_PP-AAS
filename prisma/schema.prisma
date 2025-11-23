@@ -21,6 +21,7 @@ model User {
   sessions      Session[]
   reports       Report[]
   notifications Notification[]
+  policyData   PolicyData[]
 }
 
 // SQLite doesn't support enums, using String instead
@@ -57,6 +58,7 @@ model Report {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   versions       ReportVersion[]
+  fragmentationAnalysis FragmentationAnalysis?
 }
 
 // SQLite doesn't support enums, using String instead
@@ -79,6 +81,35 @@ model Notification {
   type      String // INFO, WARNING, SUCCESS, ERROR
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model PolicyData {
+  id            String   @id @default(cuid())
+  fileName      String
+  fileType      String   // EXCEL, CSV
+  country       String?
+  state         String?
+  category      String?  // Age verification, Content moderation, etc.
+  rawData       String   // JSON string of parsed data
+  metadata      String?  // JSON string for additional metadata
+  uploadedById  String
+  uploadedBy    User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model FragmentationAnalysis {
+  id              String   @id @default(cuid())
+  reportId        String   @unique
+  report          Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  fragmentationScore Float?  // Calculated fragmentation index
+  countryCount    Int      @default(0)
+  stateCount      Int      @default(0)
+  policyCount     Int      @default(0)
+  dataSources     String?  // JSON array of data source IDs
+  analysisData    String?  // JSON string with detailed analysis
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 // SQLite doesn't support enums, using String instead
