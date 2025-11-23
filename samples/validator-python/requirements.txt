@@ -1,0 +1,4 @@
+flask==3.0.0
+pynacl==1.5.0
+base64url==1.0.1
+

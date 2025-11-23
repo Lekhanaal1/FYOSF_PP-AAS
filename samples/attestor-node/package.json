@@ -1,0 +1,24 @@
+{
+  "name": "agetoken-attestor",
+  "version": "0.1.0",
+  "description": "AgeToken Attestor PoC - Node.js/Express",
+  "main": "attestor.js",
+  "scripts": {
+    "start": "node attestor.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "uuid": "^9.0.0",
+    "tweetnacl": "^1.0.3",
+    "base64url": "^3.0.1"
+  },
+  "keywords": [
+    "agetoken",
+    "attestation",
+    "privacy"
+  ],
+  "author": "FYOSF Team",
+  "license": "MIT"
+}
+
