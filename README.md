@@ -8,13 +8,36 @@ A production-ready web application for managing and presenting the Privacy-Prese
 
 ## Features
 
+### Core Features
+
+1. **Regulatory Fragmentation Index (RFI) Builder**
+   - Create comprehensive RFI assessments for policy analysis
+   - Multi-section form with 4 categories:
+     - Basic Info (Executive Summary, Background, Evidence, Problem Statement)
+     - Core Components (AgeTokens, Duty-of-Care, State Modules)
+     - Design & Security (Privacy Implementation, Anti-False-Security, Equity Architecture, STRIDE Model)
+     - Governance & Metrics (NIST+FTC+NTIA Governance, KPIs)
+
+2. **Policy Data Navigation System** ⭐ NEW
+   - Upload and navigate fragmented Excel/CSV policy data files
+   - Multi-country and multi-state policy tracking
+   - Automatic metadata extraction (country, state, category)
+   - Data preview with filtering capabilities
+   - Statistics dashboard (total files, countries, states)
+   - Handles complex, multi-layered data landscapes across countries and states
+
+3. **STRIDE Threat Model Viewer** ⭐ NEW
+   - Interactive threat matrix with all 6 STRIDE categories
+   - Detailed mitigations for each threat
+   - Expandable threat details
+   - Operational mitigations section
+   - Complete threat analysis tailored to AgeToken design
+
+### Additional Features
+
 - **User Authentication**: Secure login and registration with password hashing
-- **PP-AAS Report Management**: Create, view, edit, and manage comprehensive policy proposals
-- **Comprehensive Sections**: 
-  - Basic Info (Executive Summary, Background, Evidence, Problem Statement)
-  - Core Components (AgeTokens, Duty-of-Care, State Modules)
-  - Design & Security (Privacy Implementation, Anti-False-Security, Equity Architecture, STRIDE Model)
-  - Governance & Metrics (NIST+FTC+NTIA Governance, KPIs)
+- **Technical Documentation**: Complete STRIDE threat model, AgeToken specifications, OpenAPI spec
+- **Sample Code**: Node.js attestor and Python validator PoC implementations
 - **Design Patterns**: Implementation of Head First Design Patterns
   - Observer Pattern (real-time notifications)
   - Strategy Pattern (content filtering)
@@ -40,6 +63,8 @@ A production-ready web application for managing and presenting the Privacy-Prese
 - **Styling**: Tailwind CSS
 - **Validation**: Zod
 - **Security**: bcryptjs for password hashing
+- **Data Processing**: xlsx (Excel parsing), papaparse (CSV parsing)
+- **Visualization**: recharts (for future data visualization)
 
 ## 📋 Prerequisites
 
@@ -85,9 +110,14 @@ A production-ready web application for managing and presenting the Privacy-Prese
 ├── app/                    # Next.js app directory
 │   ├── api/               # API routes
 │   │   ├── auth/          # Authentication endpoints
-│   │   └── reports/       # Report endpoints
+│   │   ├── data/          # Policy data endpoints (Excel/CSV)
+│   │   └── reports/       # RFI assessment endpoints
 │   ├── auth/              # Authentication pages
 │   ├── dashboard/         # Dashboard pages
+│   │   ├── data/          # Policy Data Navigation System
+│   │   ├── new/           # RFI Builder (create assessment)
+│   │   ├── reports/       # View/edit RFI assessments
+│   │   └── threat-model/  # STRIDE Threat Model viewer
 │   └── page.tsx           # Home page
 ├── lib/                   # Utility libraries
 │   ├── patterns/          # Design pattern implementations
@@ -154,21 +184,47 @@ A production-ready web application for managing and presenting the Privacy-Prese
 ## 📝 Usage
 
 ### Web Application
-1. **Register an account**: Navigate to `/auth/register`
-2. **Login**: Use your credentials at `/auth/login`
-3. **Create a PP-AAS report**: Click "New Report" in the dashboard
-4. **Fill in sections**: 
-   - Basic Info (Executive Summary, Background, Evidence, Problem Statement)
-   - Core Components (AgeTokens, Duty-of-Care, State Modules)
-   - Design & Security (Privacy, Anti-False-Security, Equity, STRIDE)
-   - Governance & Metrics (NIST+FTC+NTIA, KPIs)
-5. **Save and view**: Reports are saved and can be viewed from the dashboard
+
+#### 1. Policy Data Navigation (Feature 1)
+- Navigate to `/dashboard/data`
+- Upload Excel (.xlsx, .xls) or CSV files containing policy data
+- System automatically extracts metadata (country, state, category)
+- Filter and navigate fragmented data across multiple countries and states
+- Preview data in table format
+- Track statistics: total files, countries, states
+
+#### 2. RFI Assessment Builder
+- Navigate to `/dashboard/new` or click "New RFI Assessment"
+- Build comprehensive Regulatory Fragmentation Index assessments
+- Fill in 4 sections:
+  - Basic Info (Executive Summary, Background, Evidence, Problem Statement)
+  - Core Components (AgeTokens, Duty-of-Care, State Modules)
+  - Design & Security (Privacy, Anti-False-Security, Equity, STRIDE)
+  - Governance & Metrics (NIST+FTC+NTIA, KPIs)
+- Save and view assessments from dashboard
+
+#### 3. STRIDE Threat Model Viewer (Feature 2)
+- Navigate to `/dashboard/threat-model`
+- View interactive threat matrix with all 6 STRIDE categories
+- Click threats to see detailed mitigations
+- Review operational mitigations
+- Reference complete technical documentation
 
 ### Technical Appendix & Sample Code
-- **STRIDE Threat Model**: See `docs/STRIDE_THREAT_MODEL.md`
+- **STRIDE Threat Model**: See `docs/STRIDE_THREAT_MODEL.md` or use interactive viewer at `/dashboard/threat-model`
 - **Technical Specification**: See `docs/TECHNICAL_APPENDIX.md`
 - **OpenAPI Spec**: See `docs/openapi.yaml`
 - **Sample Code**: See `samples/README.md` for PoC implementations
+
+## 🗄️ Database Models
+
+- **User**: Authentication and user management
+- **Report**: RFI assessments with comprehensive PP-AAS sections
+- **PolicyData**: Uploaded Excel/CSV policy files with metadata (country, state, category)
+- **FragmentationAnalysis**: RFI calculations and fragmentation metrics
+- **Session**: Authentication sessions
+- **Notification**: User notifications
+- **ReportVersion**: Version history for assessments
 
 ## 🧪 Development
 
