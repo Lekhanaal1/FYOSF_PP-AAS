@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Save, ChevronRight, ChevronLeft } from 'lucide-react';
+import RFIComputation from '@/app/components/RFIComputation';
 
 const SECTIONS = [
   { id: 'basic', label: 'Basic Info', fields: ['title', 'executiveSummary', 'background', 'evidence', 'problemStatement'] },
   { id: 'core', label: 'Core Components', fields: ['ageTokens', 'dutyOfCare', 'stateModules'] },
   { id: 'design', label: 'Design & Security', fields: ['privacyImplementation', 'antiFalseSecurity', 'equityArchitecture', 'securityModel'] },
   { id: 'governance', label: 'Governance & Metrics', fields: ['governance', 'kpis'] },
+  { id: 'rfi', label: 'RFI Computation', fields: [] }, // Special section for RFI computation
 ];
 
 // RFI Builder specific field descriptions
@@ -35,6 +37,7 @@ export default function NewReportPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [currentSection, setCurrentSection] = useState(0);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     executiveSummary: '',
@@ -85,6 +88,14 @@ export default function NewReportPage() {
 
       if (!response.ok) {
         setError(data.error || 'Failed to create report');
+        return;
+      }
+
+      setSavedReportId(data.id);
+
+      // If we're on the RFI computation section, stay on page
+      if (SECTIONS[currentSection].id === 'rfi') {
+        // Report saved, RFI computation can now link to it
         return;
       }
 
@@ -197,8 +208,23 @@ export default function NewReportPage() {
               Reference technical documentation in <code className="bg-blue-100 px-1 rounded">docs/</code> folder.
             </p>
           </div>
-          <div className="space-y-6">
-            {currentFields.map((field) => (
+
+          {/* RFI Computation Section */}
+          {SECTIONS[currentSection].id === 'rfi' ? (
+            <div>
+              {!savedReportId && (
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    <strong>Note:</strong> Save your RFI assessment first to link computed metrics. 
+                    You can compute RFI now, but it will be saved when you click "Save RFI Assessment".
+                  </p>
+                </div>
+              )}
+              <RFIComputation reportId={savedReportId || undefined} />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {currentFields.map((field) => (
               <div key={field}>
                 <label
                   htmlFor={field}
@@ -237,7 +263,8 @@ export default function NewReportPage() {
                 </p>
               </div>
             ))}
-          </div>
+            </div>
+          )}
 
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between pt-6 mt-6 border-t border-gray-200">
@@ -258,14 +285,24 @@ export default function NewReportPage() {
               >
                 Cancel
               </Link>
-              {currentSection === SECTIONS.length - 1 ? (
+              {SECTIONS[currentSection].id === 'rfi' ? (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={loading}
                   className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
                   {loading ? 'Saving...' : 'Save RFI Assessment'}
+                </button>
+              ) : currentSection === SECTIONS.length - 2 ? (
+                <button
+                  type="button"
+                  onClick={nextSection}
+                  className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                >
+                  Next: Compute RFI
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
                 <button
