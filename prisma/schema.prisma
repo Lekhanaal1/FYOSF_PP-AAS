@@ -15,7 +15,7 @@ model User {
   email         String    @unique
   name          String?
   password      String
-  role          UserRole  @default(VIEWER)
+  role          String    @default("VIEWER") // ADMIN, EDITOR, VIEWER
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
@@ -23,11 +23,8 @@ model User {
   notifications Notification[]
 }
 
-enum UserRole {
-  ADMIN
-  EDITOR
-  VIEWER
-}
+// SQLite doesn't support enums, using String instead
+// UserRole: ADMIN, EDITOR, VIEWER
 
 model Session {
   id        String   @id @default(cuid())
@@ -40,21 +37,21 @@ model Session {
 model Report {
   id              String   @id @default(cuid())
   title           String
-  executiveSummary String  @db.Text
-  background     String   @db.Text
-  evidence       String   @db.Text
+  executiveSummary String
+  background     String
+  evidence       String
   // PP-AAS Specific Sections
-  problemStatement String  @db.Text
-  ageTokens      String   @db.Text  // AgeToken system details
-  dutyOfCare     String   @db.Text  // Federal baseline duty-of-care
-  stateModules   String   @db.Text  // Interoperable State Modules
-  privacyImplementation String @db.Text  // Privacy-preserving details
-  antiFalseSecurity String @db.Text  // Anti-false-security design
-  equityArchitecture String @db.Text  // Equity-driven architecture
-  securityModel  String   @db.Text  // STRIDE threat model
-  governance     String   @db.Text  // NIST + FTC + NTIA governance
-  kpis           String   @db.Text  // Key metrics & evaluation
-  status         ReportStatus @default(DRAFT)
+  problemStatement String?
+  ageTokens      String?  // AgeToken system details
+  dutyOfCare     String?  // Federal baseline duty-of-care
+  stateModules   String?  // Interoperable State Modules
+  privacyImplementation String?  // Privacy-preserving details
+  antiFalseSecurity String?  // Anti-false-security design
+  equityArchitecture String?  // Equity-driven architecture
+  securityModel  String?  // STRIDE threat model
+  governance     String?  // NIST + FTC + NTIA governance
+  kpis           String?  // Key metrics & evaluation
+  status         String       @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   authorId       String
   author         User     @relation(fields: [authorId], references: [id])
   createdAt      DateTime @default(now())
@@ -62,17 +59,14 @@ model Report {
   versions       ReportVersion[]
 }
 
-enum ReportStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
-}
+// SQLite doesn't support enums, using String instead
+// ReportStatus: DRAFT, PUBLISHED, ARCHIVED
 
 model ReportVersion {
   id        String   @id @default(cuid())
   reportId String
   report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  content   String   @db.Text
+  content   String
   version   Int
   createdAt DateTime @default(now())
 }
@@ -82,15 +76,11 @@ model Notification {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   message   String
-  type      NotificationType
+  type      String // INFO, WARNING, SUCCESS, ERROR
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
 
-enum NotificationType {
-  INFO
-  WARNING
-  SUCCESS
-  ERROR
-}
+// SQLite doesn't support enums, using String instead
+// NotificationType: INFO, WARNING, SUCCESS, ERROR
 

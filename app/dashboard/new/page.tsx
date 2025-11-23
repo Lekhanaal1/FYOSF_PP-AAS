@@ -13,6 +13,24 @@ const SECTIONS = [
   { id: 'governance', label: 'Governance & Metrics', fields: ['governance', 'kpis'] },
 ];
 
+// RFI Builder specific field descriptions
+const RFI_FIELD_DESCRIPTIONS: Record<string, string> = {
+  title: 'RFI Assessment Title (e.g., "State-Level Age Verification Fragmentation Analysis")',
+  executiveSummary: 'Executive summary of the RFI assessment, including fragmentation metrics and policy implications',
+  background: 'Background on regulatory fragmentation: existing laws (COPPA, CIPA), state mandates, international comparisons (COSI data)',
+  evidence: 'Evidence base: COSI scores, state-by-state comparison data, fragmentation metrics, research findings',
+  problemStatement: 'Problem statement: Describe regulatory fragmentation issues, divergent state mandates, privacy risks, and equity concerns',
+  ageTokens: 'AgeToken System: Technical specification, cryptographic properties, attestor certification process',
+  dutyOfCare: 'Federal Baseline Duty-of-Care: Mandatory safety defaults, platform requirements, enforcement mechanisms',
+  stateModules: 'Interoperable State Modules: Federal floor, state registration process, NTIA registry, preemption analysis',
+  privacyImplementation: 'Privacy-Preserving Implementation: Zero PII retention, attestor deletion requirements, differential privacy mechanisms',
+  antiFalseSecurity: 'Anti-False-Security Design: Mandatory defaults without tokens, Safety Report Cards, public dashboards',
+  equityArchitecture: 'Equity-Driven Architecture: No ID requirement, anonymous attestation, safe-harbor pathways, zero-cost access',
+  securityModel: 'STRIDE Threat Model: Complete threat analysis with specific mitigations (see docs/STRIDE_THREAT_MODEL.md)',
+  governance: 'Governance Structure: NIST (standards), FTC (enforcement), NTIA (coordination), grant programs',
+  kpis: 'Key Metrics & Evaluation: Exposure reduction, unsolicited adult contact rate, grooming incidents, engagement harm index, equitable token access',
+};
+
 export default function NewReportPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -111,23 +129,7 @@ export default function NewReportPage() {
   };
 
   const getFieldPlaceholder = (field: string): string => {
-    const placeholders: Record<string, string> = {
-      title: 'Enter report title (e.g., PP-AAS: Privacy-Preserving Age Attestation System)',
-      executiveSummary: 'Provide a comprehensive executive summary of the proposal...',
-      background: 'Describe the background, existing laws (COPPA, CIPA), and current gaps...',
-      evidence: 'Include research evidence, COSI data, RFI findings, and supporting data...',
-      problemStatement: 'Describe the problem: narrow existing laws, divergent state mandates, privacy risks...',
-      ageTokens: 'Detail the AgeToken system: token-based attestation, certified attestors, short-lived tokens, cryptographic properties...',
-      dutyOfCare: 'Explain federal baseline duty-of-care: safety defaults, no algorithmic amplification, messaging limits, default private accounts...',
-      stateModules: 'Describe interoperable state modules: federal floor, state registration, NTIA registry, preemption of biometric/ID mandates...',
-      privacyImplementation: 'Detail privacy-preserving implementation: ephemeral tokens, zero PII retention, attestor deletion requirements, multiple access points...',
-      antiFalseSecurity: 'Explain anti-false-security design: mandatory defaults without tokens, Safety Report Cards, public dashboards, risk reduction metrics...',
-      equityArchitecture: 'Describe equity-driven architecture: no ID requirement, anonymous attestation, safe-harbor pathways, zero-cost access...',
-      securityModel: 'Detail STRIDE threat model: Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege mitigations...',
-      governance: 'Explain governance structure: NIST (standards), FTC (enforcement), NTIA (coordination), grant programs...',
-      kpis: 'Define key metrics: exposure reduction, unsolicited adult contact rate, grooming incidents, engagement harm index, equitable token access...',
-    };
-    return placeholders[field] || `Enter ${getFieldLabel(field).toLowerCase()}...`;
+    return RFI_FIELD_DESCRIPTIONS[field] || `Enter ${getFieldLabel(field).toLowerCase()}...`;
   };
 
   if (status === 'loading') {
@@ -154,8 +156,8 @@ export default function NewReportPage() {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Create PP-AAS Report</h1>
-          <p className="text-gray-600 mt-2">Privacy-Preserving Age Attestation System Framework</p>
+          <h1 className="text-3xl font-bold text-gray-900">Regulatory Fragmentation Index (RFI) Builder</h1>
+          <p className="text-gray-600 mt-2">Build comprehensive RFI assessments with STRIDE threat model, AgeToken specifications, and technical appendix</p>
         </div>
 
         {/* Progress Indicator */}
@@ -188,6 +190,13 @@ export default function NewReportPage() {
         )}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 lg:p-8">
+          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+            <p className="text-sm text-blue-800">
+              <strong>RFI Builder:</strong> This tool helps you create comprehensive Regulatory Fragmentation Index assessments. 
+              Include STRIDE threat model analysis, AgeToken technical specifications, and policy recommendations. 
+              Reference technical documentation in <code className="bg-blue-100 px-1 rounded">docs/</code> folder.
+            </p>
+          </div>
           <div className="space-y-6">
             {currentFields.map((field) => (
               <div key={field}>
@@ -256,7 +265,7 @@ export default function NewReportPage() {
                   className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
-                  {loading ? 'Saving...' : 'Save Report'}
+                  {loading ? 'Saving...' : 'Save RFI Assessment'}
                 </button>
               ) : (
                 <button

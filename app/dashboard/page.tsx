@@ -110,7 +110,7 @@ export default function DashboardPage() {
               className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition"
             >
               <Plus className="w-5 h-5" />
-              <span>New Report</span>
+              <span>New RFI Assessment</span>
             </Link>
           </nav>
         </aside>
@@ -120,29 +120,29 @@ export default function DashboardPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Reports</h2>
-                <p className="text-gray-600 mt-1">Manage your FYOSF reports</p>
-              </div>
-              <Link
-                href="/dashboard/new"
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>New Report</span>
-              </Link>
+              <h2 className="text-2xl font-bold text-gray-900">Regulatory Fragmentation Index (RFI) Builder</h2>
+              <p className="text-gray-600 mt-1">Build and manage RFI assessments for policy analysis</p>
+            </div>
+            <Link
+              href="/dashboard/new"
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              <span>New RFI Assessment</span>
+            </Link>
             </div>
 
             {reports.length === 0 ? (
               <div className="bg-white rounded-lg shadow p-12 text-center">
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No reports yet</h3>
-                <p className="text-gray-600 mb-6">Get started by creating your first report</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No RFI assessments yet</h3>
+                <p className="text-gray-600 mb-6">Get started by creating your first Regulatory Fragmentation Index assessment</p>
                 <Link
                   href="/dashboard/new"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                 >
                   <Plus className="w-5 h-5" />
-                  <span>Create Report</span>
+                  <span>Create RFI Assessment</span>
                 </Link>
               </div>
             ) : (

@@ -193,8 +193,8 @@ export default function EditReportPage() {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Report</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Edit PP-AAS Report</h1>
-          <p className="text-gray-600 mt-2">Update your Privacy-Preserving Age Attestation System framework</p>
+          <h1 className="text-3xl font-bold text-gray-900">Edit RFI Assessment</h1>
+          <p className="text-gray-600 mt-2">Update your Regulatory Fragmentation Index assessment</p>
         </div>
 
         {/* Progress Indicator */}
