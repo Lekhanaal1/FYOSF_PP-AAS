@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  role          UserRole  @default(VIEWER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  reports       Report[]
+  notifications Notification[]
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  sessionToken String @unique
+  userId    String
+  expires   DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id              String   @id @default(cuid())
+  title           String
+  executiveSummary String  @db.Text
+  background     String   @db.Text
+  evidence       String   @db.Text
+  // PP-AAS Specific Sections
+  problemStatement String  @db.Text
+  ageTokens      String   @db.Text  // AgeToken system details
+  dutyOfCare     String   @db.Text  // Federal baseline duty-of-care
+  stateModules   String   @db.Text  // Interoperable State Modules
+  privacyImplementation String @db.Text  // Privacy-preserving details
+  antiFalseSecurity String @db.Text  // Anti-false-security design
+  equityArchitecture String @db.Text  // Equity-driven architecture
+  securityModel  String   @db.Text  // STRIDE threat model
+  governance     String   @db.Text  // NIST + FTC + NTIA governance
+  kpis           String   @db.Text  // Key metrics & evaluation
+  status         ReportStatus @default(DRAFT)
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  versions       ReportVersion[]
+}
+
+enum ReportStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model ReportVersion {
+  id        String   @id @default(cuid())
+  reportId String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  version   Int
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  type      NotificationType
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+}
+
