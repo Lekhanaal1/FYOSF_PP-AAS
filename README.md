@@ -1,4 +1,8 @@
-# PP-AAS: Privacy-Preserving Age Attestation System
+# Federal Youth Online Safety Framework (FYOSF)
+
+**PP-AAS: Privacy-Preserving Age Attestation System**
+
+PP-AAS implementation with AgeTokens, duty-of-care, state modules. Includes STRIDE threat model, OpenAPI spec, and PoC code.
 
 A production-ready web application for managing and presenting the Privacy-Preserving Age Attestation System (PP-AAS) proposal for the MIT Policy Hackathon 2025. This framework combines AgeTokens, federal baseline duty-of-care, and interoperable state modules to protect youth online without compromising privacy or equity.
 
