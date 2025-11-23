@@ -66,18 +66,24 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Validate request size
-    const bodyText = await request.text();
+    // Get and validate request body
+    let body: any;
     try {
+      const bodyText = await request.text();
       validateRequestSize(bodyText, 5 * 1024 * 1024); // 5MB max
-    } catch (sizeError) {
+      body = JSON.parse(bodyText);
+    } catch (error: any) {
+      if (error.statusCode === 413) {
+        return NextResponse.json(
+          { error: 'Request body too large' },
+          { status: 413 }
+        );
+      }
       return NextResponse.json(
-        { error: 'Request body too large' },
-        { status: 413 }
+        { error: 'Invalid request body' },
+        { status: 400 }
       );
     }
-
-    const body = JSON.parse(bodyText);
     const { reportSchema } = await import('@/lib/security/validation');
     const { ContentFilter, BasicFilterStrategy } = await import('@/lib/patterns/strategy');
 

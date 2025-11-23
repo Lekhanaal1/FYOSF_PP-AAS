@@ -73,18 +73,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate request size
-    const bodyText = await request.text();
+    // Get and validate request body
+    let body: any;
     try {
+      const bodyText = await request.text();
       validateRequestSize(bodyText, 10 * 1024 * 1024); // 10MB max
-    } catch (sizeError) {
+      body = JSON.parse(bodyText);
+    } catch (error: any) {
+      if (error.statusCode === 413) {
+        return NextResponse.json(
+          { error: 'Request body too large' },
+          { status: 413 }
+        );
+      }
       return NextResponse.json(
-        { error: 'Request body too large' },
-        { status: 413 }
+        { error: 'Invalid request body' },
+        { status: 400 }
       );
     }
-
-    const body = JSON.parse(bodyText);
 
     // Validate file
     if (!body.fileName || !body.rawData) {
